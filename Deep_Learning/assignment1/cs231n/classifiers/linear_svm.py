@@ -27,7 +27,7 @@ def svm_loss_naive(W, X, y, reg):
   num_train = X.shape[0]
   loss = 0.0
   for i in range(num_train):
-    scores = X[i].dot(W)
+    scores = X[i,:].dot(W)
     correct_class_score = scores[y[i]]
     for j in range(num_classes):
       if j == y[i]:
@@ -45,7 +45,7 @@ def svm_loss_naive(W, X, y, reg):
 
 
   # Add regularization to the loss.
-  loss += reg * np.sum(W * W)
+  loss += 0.5 * reg * np.sum(W * W)
   dW += reg * W
 
   #############################################################################
@@ -78,9 +78,11 @@ def svm_loss_vectorized(W, X, y, reg):
   delta = 1.0
   num_train = X.shape[0]
   scores = X.dot(W)
-  margins = np.maximum(0, scores - scores[y] + delta)
-  margins[y] = 0
-  loss = np.sum(margins)
+  yi_scores = scores[np.arange(scores.shape[0]),y]
+  margins = np.maximum(0, scores - np.matrix(yi_scores).T + delta)
+  margins[np.arange(num_train), y] = 0
+  loss += np.mean(np.sum(margins, axis=1))
+  loss += 0.5 * reg * np.sum(W*W)
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -95,7 +97,13 @@ def svm_loss_vectorized(W, X, y, reg):
   # to reuse some of the intermediate values that you used to compute the     #
   # loss.                                                                     #
   #############################################################################
-  pass
+  binary = margins
+  binary[margins > 0] = 1
+  row_sum = np.sum(binary, axis=1)
+  binary[np.arange(num_train), y] = -row_sum.T
+  dW = np.dot(X.T, binary)
+  dW /= num_train
+  dW += reg*W
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
