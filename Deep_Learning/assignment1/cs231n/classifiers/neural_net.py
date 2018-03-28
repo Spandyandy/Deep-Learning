@@ -75,7 +75,9 @@ class TwoLayerNet(object):
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    pass
+    X1 = np.maximum(0,X.dot(W1)+b1)
+    X2 = X1.dot(W2)+b2
+    scores = X2
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -85,14 +87,22 @@ class TwoLayerNet(object):
       return scores
 
     # Compute the loss
-    loss = None
+    loss = 0.0
     #############################################################################
     # TODO: Finish the forward pass, and compute the loss. This should include  #
     # both the data loss and L2 regularization for W1 and W2. Store the result  #
     # in the variable loss, which should be a scalar. Use the Softmax           #
     # classifier loss.                                                          #
     #############################################################################
-    pass
+    
+    print(X2.shape, np.exp(X2).shape, X2.T.shape)
+    exp_score = np.exp(X2)
+    probability = exp_score/np.sum(exp_score, axis = 1, keepdims=True)
+    prob = -np.log(probability[range(N),y])
+    dataloss = np.sum(prob)/N
+    regloss = 0.5*reg*np.sum(W1 * W1) + 0.5*reg*np.sum(W2 * W2)  
+    loss = dataloss + regloss
+    print(loss)
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -182,6 +192,8 @@ class TwoLayerNet(object):
         # Decay learning rate
         learning_rate *= learning_rate_decay
 
+        
+        
     return {
       'loss_history': loss_history,
       'train_acc_history': train_acc_history,
