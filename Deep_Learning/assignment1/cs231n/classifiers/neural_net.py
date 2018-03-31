@@ -75,9 +75,8 @@ class TwoLayerNet(object):
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    X1 = np.maximum(0,X.dot(W1)+b1)
-    X2 = X1.dot(W2)+b2
-    scores = X2
+    Relu = np.maximum(0,X.dot(W1)+b1)
+    scores = Relu.dot(W2)+b2
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -94,15 +93,11 @@ class TwoLayerNet(object):
     # in the variable loss, which should be a scalar. Use the Softmax           #
     # classifier loss.                                                          #
     #############################################################################
-    
-    print(X2.shape, np.exp(X2).shape, X2.T.shape)
-    exp_score = np.exp(X2)
-    probability = exp_score/np.sum(exp_score, axis = 1, keepdims=True)
-    prob = -np.log(probability[range(N),y])
-    dataloss = np.sum(prob)/N
-    regloss = 0.5*reg*np.sum(W1 * W1) + 0.5*reg*np.sum(W2 * W2)  
-    loss = dataloss + regloss
-    print(loss)
+    p = np.exp(scores)/np.sum(np.exp(scores), axis = 1, keepdims=True)
+    for i in range(N):
+        loss -= np.log(p[i][y[i]])
+    loss /= N
+    loss += 0.5*reg*np.sum(W1 * W1) + 0.5*reg*np.sum(W2 * W2) 
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -114,7 +109,15 @@ class TwoLayerNet(object):
     # and biases. Store the results in the grads dictionary. For example,       #
     # grads['W1'] should store the gradient on W1, and be a matrix of same size #
     #############################################################################
-    pass
+    dScores = p
+    dScores[range(N),y] -= 1
+    
+    grads['W2'] = Relu.T.dot(dScores) + reg*W2
+    grads['b2'] = np.sum(dScores, axis=0)
+    dX2 = W2.dot(dScores.T)
+    
+    grads['W1'] = X.T.dot(dX2.T) + reg*W1
+    grads['b2'] = np.sum(X, axis=0)
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
